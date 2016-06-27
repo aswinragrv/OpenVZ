@@ -1,0 +1,259 @@
+#+Title: OpenVZ
+
+* Introduction 
+    OpenVZ is a container-based virtualization for Linux. OpenVZ creates multiple secure,
+    isolated Linux containers (otherwise known as VEs or VPSs)on a single physical server 
+    enabling better server utilization and ensuring that applications do not conflict.
+    Each container performs and executes exactly like a stand-alone server; a container
+    can be rebooted independently and have root access, users, IP addresses, memory, processes,
+    files, applications, system libraries and configuration files. 
+
+* Terms used in OpenVZ
+
+**  Host or node
+    Host is a machine on which OpenVZ is installed and on which containers are created. This machine's
+    real memory,hardware and other resources is utilized for creating containers.\\
+
+** Templates
+    We can created containers with available flavors of linux. A flavor of linux available for 
+    containers is called a template. One can download templates and can save it in /vz/template/cache
+    directory to use it.
+    
+** Container (CT) or Virtual Container(VCT)
+    A container is a Virtual linux machine running on the host machine running OpenVZ. A container can
+    behave like an independent linux host machine or a server, having all the properties like that of
+    real linux host machines. It is an isolated entity and can be rebooted, suspended and destroyed as
+    per the requirements.
+
+** Container ID (CTID)
+   Every container is given an ID to identify one,a mong many. Whenever a reference is made to a container,
+   one can use Container ID to do that.
+  
+   <CTID> is a 32 bit number.
+   <CTID> 0 is reserved for host/node itself, on which one will create containers using OpenVZ.
+   <CTID> 1 to 100 are reserved for OpenVZ processes
+   <CTID> 101 and onward can be use for creating cotainers.
+
+   
+* Installing OpenVZ on centos -
+   
+ - *Add OpenVZ to yum repo*     
+     
+     #+BEGIN_EXAMPLE
+     wget -0 /etc/yum/repos.d/openvz.repo http://download.openvz.org/openvz.repo
+     rpm --import http://download.openvz.org/RPM-GPG-Key-OpenVZ
+     #+END_EXAMPLE   
+
+     
+ - *Install OpenVZ kernel*
+     
+     #+BEGIN_EXAMPLE
+     yum install vzkernel
+     #+END_EXAMPLE
+   
+    *Note:* If you find errors related to mirros and yum download fails, try the following commands given below -
+    
+     #+BEGIN_EXAMPLE
+     yum clean all
+     yum upgrade
+     #+END_EXAMPLE
+
+         The above commands will clean the yum repository and will update it to the latest repository.
+     If still the problem persists, one must change the URL in the yum mirror repository.
+
+ - *Install OpenVZ utlities*
+
+    #+BEGIN_EXAMPLE
+     yum install vzctl vzquota ploop
+    #+END_EXAMPLE
+
+     Check for the successfull installation by firing commands /vzctl/ on linux shell.
+
+   
+* Using OpenVZ commands to manage(create,destory,start,stop,destroy,suspend,set) container 
+
+       We have different set of commands used to manage the containers from their creation to destruction 
+    and configuration. These commands can be easily used to manage containers.
+
+** Creation of container 
+    
+    /vzctl create/ command is used to create a new container.
+
+    //The general command to create a container
+   
+    #+BEGIN_EXAMPLE
+    vzctl create <CTID> --ostemplate an_os_template --config config_file
+    #+END_EXAMPLE 
+
+  Example :  
+    
+    #+BEGIN_EXAMPLE
+    vzctl create 101 --ostemplate centos-5-x.86 --config basic  
+    #+END_EXAMPLE
+
+   Here, *--ostemplate* flag is used to mention the name of the template which container will be use.
+   *--config* flag is used to mention the basic configuration file used to create a container with
+    startup configuration.
+
+   *OS Templates* are saved in /vz/template/cache directory. Templates are saved in .tar and .tar.gz .
+     While using container one must avoid the file extensions.
+     For example, container centos-5-x86.tar.gz will be used as centos-5.x86.tar.gz
+
+   *config file(s)* is(are) saved at /vz/conf/ve-basic.conf. We can make a change in the configuration
+     mentioned in the file and can use that file to load our new container with basic configuration.
+
+** Listing containers 
+   
+     /vzlist/ command is used to list the containers already created. 
+   
+     //Lists containers running now 
+     #+BEGIN_EXAMPLE
+     vzlist     
+     #+END_EXAMPLE
+   
+     //Lists all containers 
+     #+BEGIN_EXAMPLE
+     vzlist -a
+     #+END_EXAMPLE        
+ 
+** Checking status of the container
+
+     /vzctl status/ command is used to check the status of a container.
+
+     //General command to check the status 
+     
+     #+BEGIN_EXAMPLE
+     vzctl status <CTID>
+     #+END_EXAMPLE   
+      
+** Start, Stop,suspend, destroy a container 
+
+   /vzctl start/ command is used to start a container.
+   /vzctl stop/ command is used to stop a running container.
+   /vzctl destroy/ command is used to destroy a container.
+   
+ Examples :
+
+    //Start a container
+
+    #+BEGIN_EXAMPLE
+     vzctl start <CTID>
+    #+END_EXAMPLE  
+
+    //Stop a container
+   
+    #+BEGIN_EXAMPLE
+     vzctl stop <CTID>
+    #+END_EXAMPLE
+
+    //Suspend a container
+
+    #+BEGIN_EXAMPLE
+     vzctl suspend <CTID>
+    #+END_EXAMPLE
+
+    //Resume a container
+   
+    #+BEGIN_EXAMPLE
+    vzctl resume <CTID>
+    #+END_EXAMPLE   
+
+    //Destroy a container
+    
+    #+BEGIN_EXAMPLE
+    vzctl destroy <CTID>
+    #+END_EXAMPLE 
+
+
+** Enter and exit to a container
+
+    /vzctl enter/ command is used to enter inside the container.
+    /exit/ is used to come out of the container. 
+
+    //Simple command to enter inside a container. This command will take prompt to the home directory of user.
+
+    #+BEGIN_EXAMPLE
+    vzctl enter <CTID>   
+    #+END_EXAMPLE
+
+** Configuring the container 
+    /vzctl set/ command is used to configure parameters to the container.
+
+    //Command to set name to a container
+    #+BEGIN_EXAMPLE
+    vzctl set <CTID> --name computer1 -save
+    #+END_EXAMPLE
+      
+    //Command to set user password in container 
+    #+BEGIN_EXAMPLE
+    vzctl set <CTID> --userpasswd root:reverse
+    #+END_EXAMPLE
+
+    //Command to set ip address to a container
+    #+BEGIN_EXAMPLE
+    vzctl set <CTID> --ipadd 10.0.0.1 --save
+    #+END_EXAMPLE  
+
+    //Command to set DNS name server 
+    #+BEGIN_EXAMPLE
+    vzctl set <CTID> --nameserver 8.8.8.8 --save
+    #+END_EXAMPLE
+ 
+    //Command to set onboot paramaters
+    #+BEGIN_EXAMPLE
+    vzctl set <CTID> --onboot yes --save
+    #+END_EXAMPLE  
+
+    //Command to delete IP address or unassign IP address
+    #+BEGIN_EXAMPLE
+    vzctl set <CTID> --ipdel 10.0.0.1 --save
+    #+END_EXAMPLE 
+
+    //Command to disable the container
+    #+BEGIN_EXAMPLE
+    vzctl set <CTID> --disabled yes
+    #+END_EXAMPLE
+
+    //Command to enable the container
+    #+BEGIN_EXAMPLE
+    vzctl set <CTID> --disabled no
+    #+END_EXAMPLE  
+
+
+   *--save* is used to save the configuration changes permanently. Otherwise the changes will persist
+       untill the system reboots.
+
+** Executing commands in container
+
+   /vzctl exec/ command is used to execute commands in a container from node.
+
+    //Execution service commands in container from node/host
+
+    #+BEGIN_EXAMPLE
+    vzctl exec <CTID> service sshd status 
+    vzctl exec <CTID> service sshd start
+    vzctl exec <CTID> ping google.com 
+    #+END_EXAMPLE
+
+* Bridging
+
+      Virtual network device (venet) is the default network device for a container. This network device
+    looks like a point-to-point connection between container and the host system. It does packet switching
+    based on IP header. This is a default network device for container (an alternative is veth device). 
+          
+      //Please use this links for adding ethernet interface and for creating bridge interface :
+  
+      #+BEGIN_EXAMPLE
+      https://www.sbarjatiya.com/notes_wiki/index.php/Adding_ethernet_interface_to_openVZ_container 
+      https://www.sbarjatiya.com/notes_wiki/index.php/Creating_bridge_interfaces_%28br0%29_for_virtual_hosts_to_use_shared_interface
+      #+END_EXAMPLE
+
+**  References 
+    
+  + OpenVZ:  https://openvz.org/Main_Page
+
+  - installation
+
+  + OPenVZ:  https://www.sbarjatiya.com/notes_wiki/index.php/Installing_openVZ_on_Cent_OS 
+
+  + OpenVZ:  https://openvz.org/Quick_Installation_CentOS_6   
